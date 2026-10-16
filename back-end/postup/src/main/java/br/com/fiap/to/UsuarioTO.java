@@ -13,8 +13,6 @@ public class UsuarioTO {
     @NotEmpty
     @Email
     private String email;
-    @Min(8)
-    @Max(16)
     @NotEmpty
     private String senha;
     @PastOrPresent
