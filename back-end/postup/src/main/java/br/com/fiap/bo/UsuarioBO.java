@@ -9,39 +9,43 @@ import java.util.ArrayList;
 public class UsuarioBO{
     // Atributo
     private UsuarioDAO usuarioDAO;
-    private UsuarioTO usuario;
 
-    // save()
+    // obterProximoId()
     public int obterProximoId() throws SQLException {
         usuarioDAO = new UsuarioDAO();
         // Regras de negócio
         return usuarioDAO.obterProximoId();
     }
 
+    // save()
     public UsuarioTO save(UsuarioTO usuario){
         usuarioDAO = new UsuarioDAO();
         // Regras de negócio
         return usuarioDAO.save(usuario);
     }
 
+    // update()
     public UsuarioTO update(UsuarioTO usuario) {
         usuarioDAO = new UsuarioDAO();
         // Regras de negócio
         return usuarioDAO.update(usuario);
     }
 
+    // findAll()
     public ArrayList<UsuarioTO> findAll() {
         usuarioDAO = new UsuarioDAO();
         // Regras de negócio
         return usuarioDAO.findAll();
     }
 
+    // findById()
     public UsuarioTO findById(int idUsuario) {
         usuarioDAO = new UsuarioDAO();
         // Regras de negócio
         return usuarioDAO.findById(idUsuario);
     }
 
+    // delete()
     public boolean delete(int idUsuario) {
         usuarioDAO = new UsuarioDAO();
         // Regras de negócio

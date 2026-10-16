@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/postup")
+@RequestMapping("/postup/usuario")
 public class UsuarioResource {
     // Atributo
     private UsuarioBO usuarioBO = new UsuarioBO();
@@ -36,17 +36,17 @@ public class UsuarioResource {
             return ResponseEntity.status(HttpStatus.OK).body(usuario);
         } else {
             // mensagem de retorno Error 404
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Remédio não encontrado!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
         }
     }
 
     @PostMapping
     public ResponseEntity<?> save(@RequestBody @Valid UsuarioTO usuario) {
         try {
-            Object resultado = usuarioBO.save(usuario);
+            UsuarioTO resultado = usuarioBO.save(usuario);
             return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao salvar o remédio");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao salvar o usuário");
         }
     }
 
@@ -56,16 +56,16 @@ public class UsuarioResource {
             Object resultado = usuarioBO.update(usuario);
             return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao atualizar remédio");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao atualizar usuário");
         }
     }
 
     @DeleteMapping("/{idUsuario}")
     public ResponseEntity<String> delete(@PathVariable int idUsuario) {
         if (usuarioBO.delete(idUsuario)) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Remédio deletado com sucesso!");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Usuário deletado com sucesso!");
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Remédio não encontrado!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
         }
     }
 }

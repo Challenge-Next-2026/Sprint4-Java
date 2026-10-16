@@ -26,6 +26,8 @@ public class UsuarioDAO{
                 // retorna o próximo id
                 return rs.getInt("proximo_id");
             }
+        } finally {
+            ConnectionFactory.closeConnection();
         }
         throw new SQLException("Não foi possível obter o próximo ID.");
     }
@@ -59,7 +61,7 @@ public class UsuarioDAO{
         return null;
     }
 
-    // Alterar email no banco
+    // UPDATE
     public UsuarioTO update(UsuarioTO usuario){
         // Comando sql para alterar dentro da tabela Usuario
         String sql = "UPDATE USUARIO SET ds_email = ?, ds_senha = ? WHERE id_usuario = ?";
@@ -152,7 +154,6 @@ public class UsuarioDAO{
 
     // Metodo para exibir usuários cadastrados
     public ArrayList<UsuarioTO> findAll(){
-        // Conversão
         // lista para armazenar todos os usuários
         ArrayList<UsuarioTO> usuariosCadastrados = new ArrayList<>();
         // Comando sql
