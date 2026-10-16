@@ -89,32 +89,30 @@ public class ArquivoDAO {
 
     // Metodo para exibir arquivos cadastrados
     public ArrayList<ArquivoTO> findAll(){
-        // Comando sql
-        String sql = "SELECT id_arquivo, nm_arquivo FROM ARQUIVO ORDER BY id_arquivo";
         // lista para armazenar todos os usuários
         ArrayList<ArquivoTO> arquivosCadastrados = new ArrayList<>();
+        // Comando sql
+        String sql = "SELECT id_arquivo, nm_arquivo FROM ARQUIVO ORDER BY id_arquivo";
         // try-with-resourses passando o comando sql para o objeto ps e armazenando a execução em um objeto rs
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()){
             // Confere se há usuários na tabela
-            if (ps != null) {
+            if (rs != null) {
                 // laço que pega usuário por usuário
                 while (rs.next()){
                     // Novo objeto
                     ArquivoTO arquivo = new ArquivoTO();
                     // Pegando valor das colunas
-                    arquivo.setIdArquivo(rs.getInt(1));
-                    arquivo.setNomeArquivo(rs.getString(2));
+                    arquivo.setIdArquivo(rs.getInt("id_arquivo"));
+                    arquivo.setNomeArquivo(rs.getString("nm_arquivo"));
                     // Adição de objeto à lista
                     arquivosCadastrados.add(arquivo);
                 }
             } else {
-                System.out.println("Não há postagens cadastradas!");
                 return null;
             }
         } catch (SQLException e) {
             System.out.println("Erro de SQL!: " + e.getMessage());
-            return null;
         } finally {
             ConnectionFactory.closeConnection();
         }

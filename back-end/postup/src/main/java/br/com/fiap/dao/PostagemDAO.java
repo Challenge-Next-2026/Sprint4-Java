@@ -129,7 +129,7 @@ public class PostagemDAO {
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()){
             // Confere se há usuários na tabela
-            if (ps != null) {
+            if (rs != null) {
                 // laço que pega usuário por usuário
                 while (rs.next()){
                     // Novo objeto
