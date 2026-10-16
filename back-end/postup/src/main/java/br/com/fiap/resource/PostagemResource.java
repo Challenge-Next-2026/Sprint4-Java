@@ -44,7 +44,7 @@ public class PostagemResource {
     public ResponseEntity<?> save(@RequestBody @Valid PostagemTO postagem) {
         try {
             PostagemTO resultado = postagemBO.save(postagem);
-            return ResponseEntity.status(HttpStatus.CREATED).body(postagem);
+            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao salvar a postagem");
         }
@@ -54,7 +54,7 @@ public class PostagemResource {
     public ResponseEntity<?> update(@PathVariable int idPostagem, @RequestBody @Valid PostagemTO postagem) {
         try {
             PostagemTO resultado = postagemBO.update(postagem);
-            return ResponseEntity.status(HttpStatus.CREATED).body(postagem);
+            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao atualizar postagem");
         }

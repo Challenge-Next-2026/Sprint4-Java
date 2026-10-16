@@ -44,7 +44,7 @@ public class UsuarioResource {
     public ResponseEntity<?> save(@RequestBody @Valid UsuarioTO usuario) {
         try {
             UsuarioTO resultado = usuarioBO.save(usuario);
-            return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
+            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao salvar o usuário");
         }
@@ -53,8 +53,8 @@ public class UsuarioResource {
     @PutMapping("/{idUsuario}")
     public ResponseEntity<?> update(@PathVariable int idUsuario, @RequestBody @Valid UsuarioTO usuario) {
         try {
-            Object resultado = usuarioBO.update(usuario);
-            return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
+            UsuarioTO resultado = usuarioBO.update(usuario);
+            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao atualizar usuário");
         }
