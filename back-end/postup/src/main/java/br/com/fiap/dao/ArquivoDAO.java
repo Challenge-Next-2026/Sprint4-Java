@@ -122,6 +122,7 @@ public class ArquivoDAO {
 
     // SELECT
     public ArquivoTO findById(int idArquivo){
+        arquivo = new ArquivoTO();
         // Comando SQL
         String sql = "SELECT id_arquivo, nm_arquivo, in_tipoarquivo, ds_tamanho, cod_url, dt_upload FROM ARQUIVO WHERE id_arquivo = ?";
         // try-with-resources

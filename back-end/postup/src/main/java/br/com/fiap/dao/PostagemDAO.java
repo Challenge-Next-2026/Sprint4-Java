@@ -91,8 +91,9 @@ public class PostagemDAO {
 
     // SELECT
     public PostagemTO findById(int idPostagem){
+        postagem = new PostagemTO();
         // Comando SQL
-        String sql = "SELECT * FROM POSTAGEM WHERE id_postagem = ?";
+        String sql = "SELECT id_postagem, ds_titulopost, ds_postagem, dt_postagem FROM POSTAGEM WHERE id_postagem = ?";
         // try-with-resources
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)){
             // Substituição de ?

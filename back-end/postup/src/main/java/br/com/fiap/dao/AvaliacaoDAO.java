@@ -88,6 +88,7 @@ public class AvaliacaoDAO {
 
     // SELECT
     public AvaliacaoTO findById(int idAvaliacao){
+        avaliacao = new AvaliacaoTO();
         // Comando SQL
         String sql = "SELECT * FROM AVALIACAO WHERE id_avaliacao = ?";
         // try-with-resources
@@ -123,7 +124,7 @@ public class AvaliacaoDAO {
         // lista para armazenar todos os usuários
         ArrayList<AvaliacaoTO> avaliacoesCadastradas = new ArrayList<>();
         // Comando sql
-        String sql = "SELECT id_avaliacao, ds_criterioavaliacado FROM USUARIO ORDER BY id_avaliacao";
+        String sql = "SELECT id_avaliacao, ds_criterioavaliacao FROM AVALIACAO ORDER BY id_avaliacao";
         // try-with-resourses passando o comando sql para o objeto ps e armazenando a execução em um objeto rs
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()){
