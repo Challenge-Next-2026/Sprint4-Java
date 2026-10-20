@@ -42,13 +42,24 @@ public class UsuarioResource {
         }
     }
 
+
     @PostMapping
     public ResponseEntity<?> save(@RequestBody @Valid UsuarioTO usuario) {
         try {
             UsuarioTO resultado = usuarioBO.save(usuario);
-            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao salvar o usuário");
+            // Se o objeto for nulo
+            if (resultado == null) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("E-mail já cadastrado ou não foi possível cadastrar o usuário.");
+            // Se não
+            } else {
+                return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+            }
+        // Erro de SQL
+        } catch (SQLException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao cadastrar o usuário.");
+        // Erro de dados inválidos
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 

@@ -18,9 +18,18 @@ public class UsuarioBO{
     }
 
     // save()
-    public UsuarioTO save(UsuarioTO usuario){
+    public UsuarioTO save(UsuarioTO usuario) throws SQLException{
         usuarioDAO = new UsuarioDAO();
-        // Regras de negócio
+        // Remove possíveis espaços na digitação do email
+        usuario.setEmail(usuario.getEmail().trim());
+        // Verifica se o email já está cadastrado
+        if (usuarioDAO.findEmail(usuario.getEmail())) {
+            return null;
+        }
+        // Atribui valor ao ID e a data
+        usuario.setIdUsuario(usuarioDAO.obterProximoId());
+        usuario.setDataCadastro(java.time.LocalDate.now());
+        // Retorno
         return usuarioDAO.save(usuario);
     }
 

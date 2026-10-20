@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 public class UsuarioTO {
     // Atributos
-    private int idUsuario;
+    private Integer idUsuario;
     @NotBlank
     private String nome;
     @NotEmpty
@@ -24,7 +24,7 @@ public class UsuarioTO {
     public UsuarioTO() {
     }
 
-    public UsuarioTO(int idUsuario, String nome, String email, String senha, LocalDate dataCadastro) {
+    public UsuarioTO(Integer idUsuario, String nome, String email, String senha, LocalDate dataCadastro) {
         this.idUsuario = idUsuario;
         this.nome = nome;
         this.email = email;
@@ -37,7 +37,7 @@ public class UsuarioTO {
         return idUsuario;
     }
 
-    public void setIdUsuario(int idUsuario) {
+    public void setIdUsuario(Integer idUsuario) {
         this.idUsuario = idUsuario;
     }
 

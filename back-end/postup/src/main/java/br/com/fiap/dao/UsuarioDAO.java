@@ -31,7 +31,7 @@ public class UsuarioDAO{
     }
 
     // CREATE / INSERT
-    public UsuarioTO save(UsuarioTO usuario){
+    public UsuarioTO save(UsuarioTO usuario) throws SQLException{
         // Comando sql para inserir dentro da tabela Usuario
         String sql = "INSERT INTO USUARIO(id_usuario, nm_usuario, ds_email, ds_senha, dt_cadastro, st_conta, num_posicaoranking) VALUES (?, ?, ?, ?, ?, ?, ?)";
         // Try with resourses
@@ -51,12 +51,9 @@ public class UsuarioDAO{
             } else {
                 return null;
             }
-        } catch (SQLException e) {
-            System.out.println("Erro de SQL: " + e.getMessage());
         } finally {
             ConnectionFactory.closeConnection();
         }
-        return null;
     }
 
     // UPDATE
@@ -224,6 +221,23 @@ public class UsuarioDAO{
                     return usuario;
                 }
                 return null;
+            }
+        } finally {
+            ConnectionFactory.closeConnection();
+        }
+    }
+
+    // Verificação de email
+    public boolean findEmail(String email) throws SQLException {
+        // Comando SQL
+        String sql = "SELECT 1 FROM USUARIO WHERE ds_email = ?";
+        // try-with-resources
+        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+            // Preenchimento de ?
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                // Se o select retornar alguma coisa, o metodo retorna true
+                return rs.next();
             }
         } finally {
             ConnectionFactory.closeConnection();
