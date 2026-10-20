@@ -1,8 +1,8 @@
 package br.com.fiap.to;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 
-import javax.swing.*;
 import java.time.LocalDate;
 
 public class UsuarioTO {
@@ -13,6 +13,8 @@ public class UsuarioTO {
     @NotEmpty
     @Email
     private String email;
+    // Annotation que envia a senha digitada na Request, mas não exibe ela na Response
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotEmpty
     private String senha;
     @PastOrPresent

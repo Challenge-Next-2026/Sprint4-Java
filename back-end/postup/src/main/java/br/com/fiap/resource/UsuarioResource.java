@@ -1,12 +1,14 @@
 package br.com.fiap.resource;
 
 import br.com.fiap.bo.UsuarioBO;
+import br.com.fiap.to.LoginRequest;
 import br.com.fiap.to.UsuarioTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -66,6 +68,20 @@ public class UsuarioResource {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Usuário deletado com sucesso!");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
+        }
+    }
+
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest credenciais) {
+        try {
+            UsuarioTO usuario = usuarioBO.login(credenciais.getEmail(), credenciais.getSenha());
+            if (usuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("E-mail ou senha inválidos.");
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(usuario);
+        } catch (SQLException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao realizar login.");
         }
     }
 }

@@ -51,4 +51,11 @@ public class UsuarioBO{
         // Regras de negócio
         return usuarioDAO.delete(idUsuario);
     }
+
+    // login()
+    public UsuarioTO login(String email, String senha) throws SQLException{
+        usuarioDAO = new UsuarioDAO();
+        // Regras de negócio
+        return usuarioDAO.login(email, senha);
+    }
 }

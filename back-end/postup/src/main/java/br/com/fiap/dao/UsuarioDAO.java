@@ -200,4 +200,33 @@ public class UsuarioDAO{
         }
         return false;
     }
+
+    // Login
+    public UsuarioTO login(String email, String senha) throws SQLException{
+        // Comando SQL
+        String sql = "SELECT id_usuario, nm_usuario, ds_email, dt_cadastro FROM USUARIO WHERE ds_email = ? AND ds_senha = ?";
+        // try-with-resources
+        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+            // Substituindo os ?
+            ps.setString(1, email);
+            ps.setString(2, senha);
+            try (ResultSet rs = ps.executeQuery()) {
+                // Se o Select retornar um usuário
+                if (rs.next()) {
+                    // Novo objeto usuario
+                    UsuarioTO usuario = new UsuarioTO();
+                    // Preenchimento de atributos
+                    usuario.setIdUsuario(rs.getInt("id_usuario"));
+                    usuario.setNome(rs.getString("nm_usuario"));
+                    usuario.setEmail(rs.getString("ds_email"));
+                    usuario.setDataCadastro(rs.getDate("dt_cadastro").toLocalDate());
+                    // Retorno
+                    return usuario;
+                }
+                return null;
+            }
+        } finally {
+            ConnectionFactory.closeConnection();
+        }
+    }
 }
