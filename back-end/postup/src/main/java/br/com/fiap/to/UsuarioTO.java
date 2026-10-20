@@ -33,7 +33,7 @@ public class UsuarioTO {
     }
 
     // Getter e Setter
-    public int getIdUsuario() {
+    public Integer getIdUsuario() {
         return idUsuario;
     }
 

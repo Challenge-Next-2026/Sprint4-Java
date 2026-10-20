@@ -3,6 +3,7 @@ package br.com.fiap.resource;
 import br.com.fiap.bo.UsuarioBO;
 import br.com.fiap.to.LoginRequest;
 import br.com.fiap.to.UsuarioTO;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +45,7 @@ public class UsuarioResource {
 
 
     @PostMapping
-    public ResponseEntity<?> save(@RequestBody @Valid UsuarioTO usuario) {
+    public ResponseEntity<?> save(@RequestBody @Valid UsuarioTO usuario, HttpSession sessao) {
         try {
             UsuarioTO resultado = usuarioBO.save(usuario);
             // Se o objeto for nulo
@@ -52,6 +53,8 @@ public class UsuarioResource {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("E-mail já cadastrado ou não foi possível cadastrar o usuário.");
             // Se não
             } else {
+                // Armazenamento de idUsuario na sessão
+                sessao.setAttribute("idUsuario", usuario.getIdUsuario());
                 return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
             }
         // Erro de SQL
@@ -61,6 +64,13 @@ public class UsuarioResource {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpSession sessao) {
+        // Encerra sessão
+        sessao.invalidate();
+        return ResponseEntity.ok("Logout realizado com sucesso!\nVolte sempre!");
     }
 
     @PutMapping("/{idUsuario}")
