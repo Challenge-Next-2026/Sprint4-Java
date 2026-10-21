@@ -63,21 +63,46 @@ public class PostagemResource {
     }
 
     @PutMapping("/{idPostagem}")
-    public ResponseEntity<?> update(@PathVariable int idPostagem, @RequestBody @Valid PostagemTO postagem) {
+    public ResponseEntity<?> update(@PathVariable int idPostagem, @RequestBody @Valid PostagemTO postagem, HttpSession sessao) {
+        // Pega o idUsuario da sessão iniciada
+        Integer idUsuario = (Integer) sessao.getAttribute("idUsuario");
+        // Verifica se esse idUsuario não veio nulo
+        if (idUsuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Faça login para editar uma postagem.");
+        }
         try {
-            PostagemTO resultado = postagemBO.update(postagem);
-            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao atualizar postagem");
+            postagem.setIdPostagem(idPostagem);
+            boolean atualizado = postagemBO.updateByOwner(postagem, idUsuario);
+            if (atualizado) {
+                return ResponseEntity.ok(postagem);
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Você não tem permissão para editar essa postagem.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao atualizar postagem");
         }
     }
 
     @DeleteMapping("/{idPostagem}")
-    public ResponseEntity<String> delete(@PathVariable int idPostagem) {
-        if (postagemBO.delete(idPostagem)) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Postagem deletada com sucesso!");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Postagem não encontrada!");
+    public ResponseEntity<String> delete(@PathVariable int idPostagem, HttpSession sessao) {
+        // Pega o idUsuario da sessão iniciada
+        Integer idUsuario = (Integer) sessao.getAttribute("idUsuario");
+        // Verifica se esse idUsuario não veio nulo
+        if (idUsuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Faça login para excluir uma postagem.");
+        }
+        try {
+            boolean excluido = postagemBO.deleteByOwner(idPostagem, idUsuario);
+            if (excluido) {
+                return ResponseEntity.noContent().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Você não tem permissão para excluir esta postagem.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao excluir a postagem.");
         }
     }
 }

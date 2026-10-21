@@ -2,6 +2,7 @@ package br.com.fiap.dao;
 
 import br.com.fiap.to.PostagemTO;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -242,6 +243,94 @@ public class PostagemDAO {
         } finally {
             try {
                 conexao.setAutoCommit(autocommitAnterior);
+            } finally {
+                ConnectionFactory.closeConnection();
+            }
+        }
+    }
+
+    // UPDATE com confirmação de idUsuario e idPostagem
+    public boolean updateByOwner(PostagemTO postagem, int idUsuario) throws SQLException {
+        // Comando SQL
+        // Consulta encadeada para verificar se na tabela Postagem_Usuario há o id da postagem a ser alterada, e o id do usuário que criou a postagem
+        String sql = "UPDATE POSTAGEM p SET ds_titulopost = ?, ds_postagem = ? WHERE p.id_postagem = ? AND EXISTS (SELECT 1 FROM POSTAGEM_USUARIO pu WHERE pu.id_postagem = p.id_postagem AND pu.id_usuario = ?)";
+        // try-with-resouces
+        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+            // Preenchendo os ?
+            ps.setString(1, postagem.getTitulo());
+            ps.setString(2, postagem.getDescricao());
+            ps.setInt(3, postagem.getIdPostagem());
+            ps.setInt(4, idUsuario);
+            // Retorno
+            return ps.executeUpdate() > 0;
+        } finally {
+            ConnectionFactory.closeConnection();
+        }
+    }
+
+    // DELETE com confirmação de idUsuario e idPostagem
+    public boolean deleteByOwner(int idPostagem, int idUsuario) throws SQLException {
+        // Abertura da conexão
+        Connection con = ConnectionFactory.getConnection();
+        // Verificação
+        if (con == null) {
+            throw new SQLException("Não foi possível conectar ao banco.");
+        }
+        // Preparando o auto commit se der tudo certo
+        boolean autoCommitOriginal = con.getAutoCommit();
+        try {
+            // Desativando o auto commit
+            con.setAutoCommit(false);
+            // Verifica se a postagem pertence ao usuário
+            String sqlVerificar = "SELECT 1 FROM POSTAGEM_USUARIO WHERE id_postagem = ? AND id_usuario = ?";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlVerificar)) {
+                // Preenchendo os ?
+                ps.setInt(1, idPostagem);
+                ps.setInt(2, idUsuario);
+                // try-with-resources
+                try (ResultSet rs = ps.executeQuery()) {
+                    // Se o SGBD der erro e não executar, um rollback é aplicado
+                    if (!rs.next()) {
+                        con.rollback();
+                        return false;
+                    }
+                }
+            }
+            // Exclui o registro de Postagem_Usuário
+            String sqlVinculo = "DELETE FROM POSTAGEM_USUARIO WHERE id_postagem = ? AND id_usuario = ?";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlVinculo)) {
+                // Preenchimento de ?
+                ps.setInt(1, idPostagem);
+                ps.setInt(2, idUsuario);
+                // Se der erro, executa um rollback
+                if (ps.executeUpdate() == 0) {
+                    con.rollback();
+                    return false;
+                }
+            }
+            // Exclui a postagem
+            String sqlPostagem = "DELETE FROM POSTAGEM WHERE id_postagem = ?";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlPostagem)) {
+                // Preenchimento de ?
+                ps.setInt(1, idPostagem);
+                // Se der erro, executa um rollback
+                if (ps.executeUpdate() == 0) {
+                    con.rollback();
+                    return false;
+                }
+            }
+            // Confirma as duas exclusões com commit
+            con.commit();
+            return true;
+        } catch (SQLException e) {
+            con.rollback();
+            throw e;
+        } finally {
+            try {
+                con.setAutoCommit(autoCommitOriginal);
             } finally {
                 ConnectionFactory.closeConnection();
             }

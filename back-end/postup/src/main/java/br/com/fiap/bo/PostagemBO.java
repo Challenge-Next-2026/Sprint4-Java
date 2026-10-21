@@ -58,4 +58,18 @@ public class PostagemBO {
         // Regras de negócio
         return postagemDAO.savePostWithUser(postagem, idUsuario);
     }
+
+    // updateByOwner()
+    public boolean updateByOwner(PostagemTO postagem, int idUsuario) throws SQLException {
+        postagemDAO = new PostagemDAO();
+        // Regras de negócio
+        return postagemDAO.updateByOwner(postagem, idUsuario);
+    }
+
+    // deleteByOwner()
+    public boolean deleteByOwner(int idPostagem, int idUsuario) throws SQLException {
+        postagemDAO = new PostagemDAO();
+        // Regras de negócio
+        return postagemDAO.deleteByOwner(idPostagem, idUsuario);
+    }
 }
