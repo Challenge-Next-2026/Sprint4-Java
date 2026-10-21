@@ -94,12 +94,14 @@ public class UsuarioResource {
 
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest credenciais) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest credenciais, HttpSession sessao) {
         try {
             UsuarioTO usuario = usuarioBO.login(credenciais.getEmail(), credenciais.getSenha());
             if (usuario == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("E-mail ou senha inválidos.");
             }
+            // Armazenamento de idUsuario na sessão
+            sessao.setAttribute("idUsuario", usuario.getIdUsuario());
             return ResponseEntity.status(HttpStatus.OK).body(usuario);
         } catch (SQLException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao realizar login.");

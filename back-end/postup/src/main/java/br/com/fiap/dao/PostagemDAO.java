@@ -174,6 +174,80 @@ public class PostagemDAO {
         return false;
     }
 
+    // Metodo para atribuir a criação de uma postagem a um usuário já logado, com sua sessão iniciada
+    public PostagemTO savePostWithUser(PostagemTO postagem, int idUsuario) throws SQLException {
+        // Comando SQL para inserir uma postagem
+        String sqlPostagem = "INSERT INTO POSTAGEM (id_postagem, ds_titulopost, ds_postagem, dt_postagem, st_postagem, geolocalizacao_id_geoloc, arquivo_id_arquivo, validacao_id_validacao, avaliacao_id_avaliacao, pontuacao_id_pontuacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Comando SQL para registrar a postagem criada anterior ao usuário logado
+        String sqlRelacionamento = "INSERT INTO POSTAGEM_USUARIO (id_usuario, id_postagem, qtd_porcentagemparticipacao) VALUES (?, ?, ?)";
+        // abrindo conexão
+        var conexao = ConnectionFactory.getConnection();
+        // Verificando se ela existe
+        if (conexao == null) {
+            throw new SQLException("Não foi possível estabelecer conexão com o banco.");
+        }
+        // Se tudo der certo faz o commit no banco automático
+        boolean autocommitAnterior = conexao.getAutoCommit();
+
+        try {
+            conexao.setAutoCommit(false);
+            // Gera o ID dentro da mesma conexão e transação.
+            try (PreparedStatement psId = conexao.prepareStatement(
+                    "SELECT NVL(MAX(id_postagem), 0) + 1 FROM POSTAGEM");
+                 ResultSet rs = psId.executeQuery()) {
+                if (rs.next()) {
+                    // Pega o próximo id disponível, a partir da consulta armazenada no objeto psId
+                    postagem.setIdPostagem(rs.getInt(1));
+                } else {
+                    throw new SQLException("Não foi possível gerar o ID da postagem.");
+                }
+            }
+            // Insere a postagem.
+            try (PreparedStatement ps = conexao.prepareStatement(sqlPostagem)) {
+                ps.setInt(1, postagem.getIdPostagem());
+                ps.setString(2, postagem.getTitulo());
+                ps.setString(3, postagem.getDescricao());
+                ps.setDate(4, java.sql.Date.valueOf(postagem.getDataPostagem()));
+                ps.setString(5, "T");
+                ps.setInt(6, 1);
+                ps.setInt(7, 1);
+                ps.setInt(8, 1);
+                ps.setInt(9, 1);
+                ps.setInt(10, 1);
+
+                ps.executeUpdate();
+            }
+
+            // Vincula a postagem ao usuário logado.
+            try (PreparedStatement ps = conexao.prepareStatement(sqlRelacionamento)) {
+                ps.setInt(1, idUsuario);
+                ps.setInt(2, postagem.getIdPostagem());
+                ps.setInt(3, 99);
+
+                ps.executeUpdate();
+            }
+
+            conexao.commit();
+            return postagem;
+
+        } catch (SQLException e) {
+            try {
+                conexao.rollback();
+            } catch (SQLException erroRollback) {
+                e.addSuppressed(erroRollback);
+            }
+
+            throw e;
+
+        } finally {
+            try {
+                conexao.setAutoCommit(autocommitAnterior);
+            } finally {
+                ConnectionFactory.closeConnection();
+            }
+        }
+    }
+
     // Retorna FK
     public int exibirFKArquivo(int idPostagem){
         int idArquivo;

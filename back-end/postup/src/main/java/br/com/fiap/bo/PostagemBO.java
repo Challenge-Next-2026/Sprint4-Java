@@ -51,4 +51,11 @@ public class PostagemBO {
         // Regras de negócio
         return postagemDAO.delete(idPostagem);
     }
+
+    // savePostWithUser()
+    public PostagemTO savePostWithUser(PostagemTO postagem, int idUsuario) throws SQLException{
+        postagemDAO = new PostagemDAO();
+        // Regras de negócio
+        return postagemDAO.savePostWithUser(postagem, idUsuario);
+    }
 }
