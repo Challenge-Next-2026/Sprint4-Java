@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -52,7 +53,7 @@ public class PostagemResource {
         }
         // Se o id existir
         try {
-            postagem.setDataPostagem(java.time.LocalDate.now());
+            postagem.setDataPostagem(LocalDate.now());
             PostagemTO resultado = postagemBO.savePostWithUser(postagem, idUsuario);
             return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
         } catch (SQLException e) {

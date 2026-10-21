@@ -4,9 +4,12 @@ import br.com.fiap.bo.ArquivoBO;
 import br.com.fiap.to.ArquivoTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -41,12 +44,26 @@ public class ArquivoResource {
     }
 
     @PostMapping
-    public ResponseEntity<?> save(@RequestBody @Valid ArquivoTO arquivo) {
+    public ResponseEntity<?> save(@RequestBody @Valid ArquivoTO arquivo, HttpSession sessao) {
+        // Recuperando usuário logado na sessão
+        Integer idUsuario = (Integer) sessao.getAttribute("idUsuario");
+        // Verificação se o idUsuario da sessão não é nulo
+        if (idUsuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Faça login para cadastrar um arquivo");
+        }
         try {
-            ArquivoTO resultado = arquivoBO.save(arquivo);
-            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao salvar o arquivo");
+            // Salvando o arquivo
+            ArquivoTO arquivoSalvo = arquivoBO.saveByOwner(arquivo, idUsuario);
+            // Se o arquivo for nulo, tem algo errado
+            if (arquivoSalvo == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("A postagem não existe, não pertence ao usuário ou já possui um arquivo.");
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(arquivoSalvo);
+        } catch (SQLException e) {
+            // exibe o erro no output
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro interno ao salvar o arquivo.");
         }
     }
 

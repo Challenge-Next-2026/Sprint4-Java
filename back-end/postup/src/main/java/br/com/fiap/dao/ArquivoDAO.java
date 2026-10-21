@@ -2,9 +2,11 @@ package br.com.fiap.dao;
 
 import br.com.fiap.to.ArquivoTO;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class ArquivoDAO {
@@ -168,5 +170,108 @@ public class ArquivoDAO {
             System.out.println("Erro de SQL: " + e.getMessage());
         }
         return false;
+    }
+
+    // UPDATE avaliando a sessão iniciada
+    public ArquivoTO saveByOwner(ArquivoTO arquivo, int idUsuario) throws SQLException {
+        // Abre a conexão
+        Connection con = ConnectionFactory.getConnection();
+        // Armazena o Auto commit
+        boolean autoCommitOriginal = con.getAutoCommit();
+        try {
+            // Desativa o auto commit
+            con.setAutoCommit(false);
+            // Verifica se a postagem pertence ao usuário logado
+            String sqlPostagem = " SELECT id_postagem FROM POSTAGEM_USUARIO WHERE id_postagem = ? AND id_usuario = ?";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlPostagem)) {
+                // Preenchimento de ?
+                ps.setInt(1, arquivo.getIdPostagem());
+                ps.setInt(2, idUsuario);
+                // try-with-resources
+                try (ResultSet rs = ps.executeQuery()) {
+                    // Se o SGBD não executar, dá um rollback
+                    if (!rs.next()) {
+                        System.out.println("DEBUG 1: postagem não pertence ao usuário.");
+                        con.rollback();
+                        return null;
+                    }
+                }
+            }
+
+            // Impede substituir um arquivo já associado à postagem
+            // Consulta que pega a FK arquivo ta tabela Postagem
+            String sqlVerificarArquivo = " SELECT arquivo_id_arquivo FROM POSTAGEM WHERE id_postagem = ?";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlVerificarArquivo)) {
+                // Preenchendo ?
+                ps.setInt(1, arquivo.getIdPostagem());
+                // try-with-resources
+                try (ResultSet rs = ps.executeQuery()) {
+                    // Se a consulta não for executada, ou o campo da FK estiver vazio, dá um rollback
+                    if (!rs.next()) {
+                        System.out.println("DEBUG 2: postagem inexistente ou já possui arquivo.");
+                        con.rollback();
+                        return null;
+                    }
+                }
+            }
+
+            // Obtém o próximo ID disponível
+            String sqlId = " SELECT NVL(MAX(id_arquivo), 0) + 1 AS proximo_id FROM ARQUIVO";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlId);
+                 ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                // Atualiza o id do objeto de acordo com o proximo id disponível no banco
+                arquivo.setIdArquivo(rs.getInt("proximo_id"));
+            }
+            // Atribuição de data
+            if (arquivo.getDataUpload() == null) {
+                arquivo.setDataUpload(LocalDate.now());
+            }
+            // Insere o arquivo
+            String sqlInsert = " INSERT INTO ARQUIVO (id_arquivo, nm_arquivo, in_tipoarquivo, ds_tamanho, cod_url, dt_upload) VALUES (?, ?, ?, ?, ?, ?)";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlInsert)) {
+                // Preenchendo ?
+                ps.setInt(1, arquivo.getIdArquivo());
+                ps.setString(2, arquivo.getNomeArquivo());
+                ps.setString(3, arquivo.getTipo());
+                ps.setInt(4, arquivo.getTamanho());
+                ps.setString(5, arquivo.getUrl());
+                ps.setDate(6, java.sql.Date.valueOf(arquivo.getDataUpload()));
+                ps.executeUpdate();
+            }
+
+            // Altera o arquivo da postagem, confirmando novamente a propriedade
+            String sqlAssociar = " UPDATE POSTAGEM SET arquivo_id_arquivo = ? WHERE id_postagem = ? AND EXISTS ( SELECT 1 FROM POSTAGEM_USUARIO pu WHERE pu.id_postagem = POSTAGEM.id_postagem AND pu.id_usuario = ?)";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlAssociar)) {
+                // Preenchendo ?
+                ps.setInt(1, arquivo.getIdArquivo());
+                ps.setInt(2, arquivo.getIdPostagem());
+                ps.setInt(3, idUsuario);
+                // Se a consulta não for executada, dá um rollback
+                if (ps.executeUpdate() != 1) {
+                    System.out.println("DEBUG 3: falha ao associar o arquivo à postagem.");
+                    con.rollback();
+                    return null;
+                }
+            }
+            // Realiza o commit
+            con.commit();
+            // Retorna o objeto
+            return arquivo;
+        } catch (SQLException e) {
+            con.rollback();
+            throw e;
+        } finally {
+            try {
+                con.setAutoCommit(autoCommitOriginal);
+            } finally {
+                ConnectionFactory.closeConnection();
+            }
+        }
     }
 }

@@ -51,4 +51,11 @@ public class ArquivoBO {
         // Regras de negócio
         return arquivoDAO.delete(idArquivo);
     }
+
+    // saveByOwner
+    public ArquivoTO saveByOwner(ArquivoTO arquivo, int idUsuario) throws SQLException {
+        arquivoDAO = new ArquivoDAO();
+        // Regras de negócio
+        return arquivoDAO.saveByOwner(arquivo, idUsuario);
+    }
 }
