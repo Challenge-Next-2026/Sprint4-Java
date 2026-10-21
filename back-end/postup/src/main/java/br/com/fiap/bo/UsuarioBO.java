@@ -67,4 +67,11 @@ public class UsuarioBO{
         // Regras de negócio
         return usuarioDAO.login(email, senha);
     }
+
+    // updateByOwner()
+    public UsuarioTO updateByOwner(UsuarioTO usuario, int idUsuarioLogado) throws SQLException {
+        usuarioDAO = new UsuarioDAO();
+        // Regras de negócio
+        return usuarioDAO.updateByOwner(usuario, idUsuarioLogado);
+    }
 }

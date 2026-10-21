@@ -243,4 +243,25 @@ public class UsuarioDAO{
             ConnectionFactory.closeConnection();
         }
     }
+
+    // UPDATE permite a edição apenas do usuário logado
+    public UsuarioTO updateByOwner(UsuarioTO usuario, int idUsuarioLogado) throws SQLException {
+        // Comando SQL
+        String sql = "UPDATE USUARIO SET ds_email = ?, ds_senha = ? WHERE id_usuario = ?";
+        // try-with-resources
+        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+            // Preenchimento de ?
+            ps.setString(1, usuario.getEmail());
+            ps.setString(2, usuario.getSenha());
+            ps.setInt(3, idUsuarioLogado);
+            // Se o comando executar, retorna o objeto TO
+            if (ps.executeUpdate() > 0) {
+                return usuario;
+            } else {
+                return null;
+            }
+        } finally {
+            ConnectionFactory.closeConnection();
+        }
+    }
 }

@@ -74,12 +74,31 @@ public class UsuarioResource {
     }
 
     @PutMapping("/{idUsuario}")
-    public ResponseEntity<?> update(@PathVariable int idUsuario, @RequestBody @Valid UsuarioTO usuario) {
+    public ResponseEntity<?> update(@PathVariable int idUsuario, @RequestBody @Valid UsuarioTO usuario, HttpSession sessao) {
+        // Armazena o id do usuário logado na sessão
+        Integer idUsuarioLogado = (Integer) sessao.getAttribute("idUsuario");
+        // Se esse id for nulo o login não foi feito
+        if (idUsuarioLogado == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Faça login para editar seus dados.");
+        }
+        // Se o id for diferente do usuário impede ele de editar a conta de outro usuário
+        if (idUsuarioLogado != idUsuario) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Você não tem permissão para editar esta conta.");
+        }
         try {
-            UsuarioTO resultado = usuarioBO.update(usuario);
-            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+            // Atribui id ao objeto usuario
+            usuario.setIdUsuario(idUsuarioLogado);
+            // Chama o updateByOwner()
+            UsuarioTO resultado = usuarioBO.updateByOwner(usuario, idUsuarioLogado);
+            // Se o resultado for diferente de null, deu certo
+            if (resultado != null) {
+                return ResponseEntity.ok(resultado);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao atualizar usuário");
+            // exibe o erro no output
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao atualizar usuário.");
         }
     }
 
