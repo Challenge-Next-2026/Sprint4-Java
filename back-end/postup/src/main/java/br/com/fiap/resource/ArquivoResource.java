@@ -67,22 +67,55 @@ public class ArquivoResource {
         }
     }
 
+
     @PutMapping("/{idArquivo}")
-    public ResponseEntity<?> update(@PathVariable int idArquivo, @RequestBody @Valid ArquivoTO arquivo) {
+    public ResponseEntity<?> update(@PathVariable int idArquivo, @RequestBody @Valid ArquivoTO arquivo, HttpSession sessao) {
+        // Recuperar o id do usuário logado, sessão em andamento
+        Integer idUsuario = (Integer) sessao.getAttribute("idUsuario");
+        // Se esse id for nulo, o usuário não está logado
+        if (idUsuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Faça login para atualizar um arquivo.");
+        }
+        // Garante que o ID da request seja o ID do arquivo atualizado
+        arquivo.setIdArquivo(idArquivo);
         try {
-            ArquivoTO resultado = arquivoBO.update(arquivo);
-            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao atualizar arquivo");
+            // Chamada de metodo
+            ArquivoTO resultado = arquivoBO.updateByOwner(arquivo, idUsuario);
+            // Se o objeto vier nulo, algo deu erro
+            if (resultado == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Arquivo não encontrado ou não pertence a uma postagem sua.");
+            } else {
+                return ResponseEntity.ok(resultado);
+            }
+        } catch (SQLException e) {
+            // Print de erro no console
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao atualizar o arquivo.");
         }
     }
 
+
     @DeleteMapping("/{idArquivo}")
-    public ResponseEntity<String> delete(@PathVariable int idArquivo) {
-        if (arquivoBO.delete(idArquivo)) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Arquivo deletado com sucesso!");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Arquivo não encontrado!");
+    public ResponseEntity<?> delete(@PathVariable int idArquivo, HttpSession sessao) {
+        // Recuperar o id do usuário logado, sessão em andamento
+        Integer idUsuario = (Integer) sessao.getAttribute("idUsuario");
+        // Se esse id for nulo, o usuário não está logado
+        if (idUsuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Faça login para excluir um arquivo.");
+        }
+        try {
+            // Chamada de função
+            boolean excluido = arquivoBO.deleteByOwner(idArquivo, idUsuario);
+            // Se o retorno for false, dá erro
+            if (!excluido) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Arquivo não encontrado, não pertence a uma postagem sua ou ainda está associado a outra postagem.");
+            } else {
+                return ResponseEntity.noContent().build();
+            }
+        } catch (SQLException e) {
+            // Print de erro no console
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao excluir o arquivo.");
         }
     }
 }

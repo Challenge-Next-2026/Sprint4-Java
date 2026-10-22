@@ -274,4 +274,98 @@ public class ArquivoDAO {
             }
         }
     }
+
+    // UPDATE avaliando a sessão iniciada
+    public ArquivoTO updateByOwner(ArquivoTO arquivo, int idUsuario) throws SQLException {
+        // Abrindo conexão
+        Connection con = ConnectionFactory.getConnection();
+        // Comando SQL
+        // Verifica se o arquivo pertence ao usuário da sessão e se a postagem está correta
+        String sql = " UPDATE ARQUIVO SET nm_arquivo = ?, in_tipoarquivo = ?, ds_tamanho = ?, cod_url = ? WHERE id_arquivo = ? AND EXISTS (SELECT 1 FROM POSTAGEM p JOIN POSTAGEM_USUARIO pu ON pu.id_postagem = p.id_postagem WHERE p.arquivo_id_arquivo = ARQUIVO.id_arquivo AND pu.id_usuario = ?)";
+        // try-with-resources
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            // Preenchendo ?
+            ps.setString(1, arquivo.getNomeArquivo());
+            ps.setString(2, arquivo.getTipo());
+            ps.setInt(3, arquivo.getTamanho());
+            ps.setString(4, arquivo.getUrl());
+            ps.setInt(5, arquivo.getIdArquivo());
+            ps.setInt(6, idUsuario);
+            // Se o comando não executar, retorna null
+            if (ps.executeUpdate() != 1) {
+                return null;
+            } else {
+                return arquivo;
+            }
+        } finally {
+            ConnectionFactory.closeConnection();
+        }
+    }
+
+    // DELETE de arquivo de acordo com o usuario logado e a postagem relacionada
+    public boolean deleteByOwner(int idArquivo, int idUsuario) throws SQLException {
+        // Abrindo conexão
+        Connection con = ConnectionFactory.getConnection();
+        // Armazenando o auto commit
+        boolean autoCommitOriginal = con.getAutoCommit();
+        try {
+            // Desativando o auto commit
+            con.setAutoCommit(false);
+            // Verifica se o arquivo está associado a uma postagem do usuário
+            String sqlVerificar = "SELECT 1 FROM POSTAGEM p JOIN POSTAGEM_USUARIO pu ON pu.id_postagem = p.id_postagem WHERE p.arquivo_id_arquivo = ? AND pu.id_usuario = ?";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlVerificar)) {
+                // Preenchendo ?
+                ps.setInt(1, idArquivo);
+                ps.setInt(2, idUsuario);
+                // try-with-resources
+                try (ResultSet rs = ps.executeQuery()) {
+                    // Se a consulta não executar, dá um rollback
+                    if (!rs.next()) {
+                        con.rollback();
+                        return false;
+                    }
+                }
+            }
+
+            // Desassocia o arquivo das postagens do usuário
+            String sqlDesassociar = "UPDATE POSTAGEM p SET arquivo_id_arquivo = NULL WHERE p.arquivo_id_arquivo = ? AND EXISTS (SELECT 1 FROM POSTAGEM_USUARIO pu WHERE pu.id_postagem = p.id_postagem AND pu.id_usuario = ?)";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlDesassociar)) {
+                // Preenchimento de ?
+                ps.setInt(1, idArquivo);
+                ps.setInt(2, idUsuario);
+                // Se o update não for executado, dá um rollback
+                if (ps.executeUpdate() < 1) {
+                    con.rollback();
+                    return false;
+                }
+            }
+
+            // Exclui somente se nenhuma postagem ainda referenciar o arquivo
+            String sqlDelete = "DELETE FROM ARQUIVO a WHERE a.id_arquivo = ? AND NOT EXISTS (SELECT 1 FROM POSTAGEM p WHERE p.arquivo_id_arquivo = a.id_arquivo)";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlDelete)) {
+                // Preenchendo ?
+                ps.setInt(1, idArquivo);
+                // Se o delete não for executado, dá um rollback
+                if (ps.executeUpdate() != 1) {
+                    con.rollback();
+                    return false;
+                }
+            }
+            // Confirma as operações com commit
+            con.commit();
+            return true;
+        } catch (SQLException e) {
+            con.rollback();
+            throw e;
+        } finally {
+            try {
+                con.setAutoCommit(autoCommitOriginal);
+            } finally {
+                ConnectionFactory.closeConnection();
+            }
+        }
+    }
 }

@@ -211,7 +211,7 @@ public class PostagemDAO {
                 ps.setDate(4, java.sql.Date.valueOf(postagem.getDataPostagem()));
                 ps.setString(5, "T");
                 ps.setInt(6, 1);
-                ps.setInt(7, 1);
+                ps.setInt(7, 0);
                 ps.setInt(8, 1);
                 ps.setInt(9, 1);
                 ps.setInt(10, 1);

@@ -52,10 +52,24 @@ public class ArquivoBO {
         return arquivoDAO.delete(idArquivo);
     }
 
-    // saveByOwner
+    // saveByOwner()
     public ArquivoTO saveByOwner(ArquivoTO arquivo, int idUsuario) throws SQLException {
         arquivoDAO = new ArquivoDAO();
         // Regras de negócio
         return arquivoDAO.saveByOwner(arquivo, idUsuario);
+    }
+
+    // updateByOwner()
+    public ArquivoTO updateByOwner(ArquivoTO arquivo, int idUsuario) throws SQLException {
+        arquivoDAO = new ArquivoDAO();
+        // Regras de negócio
+        return arquivoDAO.updateByOwner(arquivo, idUsuario);
+    }
+
+    // deleteByOwner()
+    public boolean deleteByOwner(int idArquivo, int idUsuario) throws SQLException {
+        arquivoDAO = new ArquivoDAO();
+        // Regras de negócio
+        return arquivoDAO.deleteByOwner(idArquivo, idUsuario);
     }
 }
