@@ -2,6 +2,7 @@ package br.com.fiap.dao;
 
 import br.com.fiap.to.AvaliacaoTO;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -168,5 +169,104 @@ public class AvaliacaoDAO {
             ConnectionFactory.closeConnection();
         }
         return false;
+    }
+
+    // CREATE avaliação com usuário logado
+    public AvaliacaoTO saveByOwner(AvaliacaoTO avaliacao, int idPostagem, int idUsuario) throws SQLException {
+        // Abrindo conexão
+        Connection con = ConnectionFactory.getConnection();
+        // Armazenando auto commit
+        boolean autoCommitOriginal = con.getAutoCommit();
+        // try-with-resources
+        try {
+            // Desativando o auto commit
+            con.setAutoCommit(false);
+            // Confirma que a postagem pertence ao usuário e ainda não possui avaliação associada.
+            String sqlValidar = "SELECT p.avaliacao_id_avaliacao FROM POSTAGEM p JOIN POSTAGEM_USUARIO pu ON pu.id_postagem = p.id_postagem WHERE p.id_postagem = ? AND pu.id_usuario = ? FOR UPDATE";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlValidar)) {
+                // Preenchendo ?
+                ps.setInt(1, idPostagem);
+                ps.setInt(2, idUsuario);
+                // try-with-resources
+                try (ResultSet rs = ps.executeQuery()) {
+                    // Se a consulta não for executada, dá um rollback
+                    if (!rs.next()) {
+                        con.rollback();
+                        return null;
+                    } else {
+                        // Armazena o idAvaliação encontrado na consulta
+                        rs.getInt("avaliacao_id_avaliacao");
+                    }
+                    if (!rs.wasNull()) {
+                        con.rollback();
+                        return null;
+                    }
+                }
+            }
+
+            // Obtém o próximo ID disponível da avaliação.
+            String sqlId = "SELECT NVL(MAX(id_avaliacao), 0) + 1 AS proximo_id FROM AVALIACAO";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlId);
+                 ResultSet rs = ps.executeQuery()) {
+                // Se a consulta falhar, joga uma exceção
+                if (!rs.next()) {
+                    throw new SQLException("Não foi possível obter o ID da avaliação.");
+                } else {
+                    avaliacao.setIdAvaliacao(rs.getInt("proximo_id"));
+                }
+            }
+
+            // Define a data da avaliação, se ainda não foi informada.
+            if (avaliacao.getDataAvaliacao() == null) {
+                avaliacao.setDataAvaliacao(java.time.LocalDate.now());
+            }
+
+            // Insere a avaliação.
+            String sqlInsert = "INSERT INTO AVALIACAO (id_avaliacao, ds_criterioavaliacao, vl_notaimpacto, vl_notadificuldade, vl_notaconfiabilidade, vl_notafrequencia, dt_avaliacao) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlInsert)) {
+                // Preenchendo ?
+                ps.setInt(1, avaliacao.getIdAvaliacao());
+                ps.setString(2, avaliacao.getCriterio());
+                ps.setInt(3, avaliacao.getNotaImpacto());
+                ps.setInt(4, avaliacao.getNotaDificuldade());
+                ps.setInt(5, avaliacao.getNotaConfiabilidade());
+                ps.setInt(6, avaliacao.getNotaFrequencia());
+                ps.setDate(7, java.sql.Date.valueOf(avaliacao.getDataAvaliacao()));
+                // Se o insert não for executado, lança uma exceção
+                if (ps.executeUpdate() != 1) {
+                    throw new SQLException("Não foi possível inserir a avaliação.");
+                }
+            }
+
+            // Associa a avaliação à postagem do usuário.
+            String sqlAssociar = "UPDATE POSTAGEM p SET avaliacao_id_avaliacao = ? WHERE p.id_postagem = ? AND p.avaliacao_id_avaliacao IS NULL AND EXISTS (SELECT 1 FROM POSTAGEM_USUARIO pu WHERE pu.id_postagem = p.id_postagem AND pu.id_usuario = ?)";
+            // try-with-resources
+            try (PreparedStatement ps = con.prepareStatement(sqlAssociar)) {
+                // Preenchendo ?
+                ps.setInt(1, avaliacao.getIdAvaliacao());
+                ps.setInt(2, idPostagem);
+                ps.setInt(3, idUsuario);
+                // Se o update não for executado, lança uma exceção
+                if (ps.executeUpdate() != 1) {
+                    throw new SQLException("Não foi possível associar a avaliação à postagem.");
+                }
+            }
+
+            // Confirma as duas operações com commit.
+            con.commit();
+            return avaliacao;
+        } catch (SQLException e) {
+            con.rollback();
+            throw e;
+        } finally {
+            try {
+                con.setAutoCommit(autoCommitOriginal);
+            } finally {
+                ConnectionFactory.closeConnection();
+            }
+        }
     }
 }

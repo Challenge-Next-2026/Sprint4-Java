@@ -2,12 +2,11 @@ package br.com.fiap.dao;
 
 import br.com.fiap.to.PostagemTO;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+
+import static java.sql.Types.INTEGER;
 
 public class PostagemDAO {
     // Atributo
@@ -208,12 +207,12 @@ public class PostagemDAO {
                 ps.setInt(1, postagem.getIdPostagem());
                 ps.setString(2, postagem.getTitulo());
                 ps.setString(3, postagem.getDescricao());
-                ps.setDate(4, java.sql.Date.valueOf(postagem.getDataPostagem()));
+                ps.setDate(4, Date.valueOf(postagem.getDataPostagem()));
                 ps.setString(5, "T");
                 ps.setInt(6, 1);
-                ps.setInt(7, 0);
+                ps.setNull(7, INTEGER);
                 ps.setInt(8, 1);
-                ps.setInt(9, 1);
+                ps.setNull(9, INTEGER);
                 ps.setInt(10, 1);
 
                 ps.executeUpdate();
@@ -452,19 +451,25 @@ public class PostagemDAO {
         }
     }
 
-    // Conta a quantidade de postagens
-    public int contarPostagens(){
+    // Conta a quantidade de postagens de um usuário logado
+    public int countPosts(int idUsuario) {
         // Comando SQL
-        String sql = "SELECT COUNT(*) FROM POSTAGEM";
-        // try-with-resouces
-        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+        String sql = "SELECT COUNT(*) FROM POSTAGEM_USUARIO WHERE id_usuario = ?";
+        // try-with-resources
+        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+            // Preenchendo ?
+            ps.setInt(1, idUsuario);
+            // try-with-resources
+            try (ResultSet rs = ps.executeQuery()) {
+                // Se executar, retorna o numero de postagens
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (SQLException e) {
-            System.out.println("Erro de SQL!\n" + e.getMessage());
-            return 0;
+            System.out.println("Erro ao contar postagens do usuário: " + e.getMessage());
+        } finally {
+            ConnectionFactory.closeConnection();
         }
         return 0;
     }

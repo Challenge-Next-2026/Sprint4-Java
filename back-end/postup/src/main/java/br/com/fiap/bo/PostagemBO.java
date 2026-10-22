@@ -72,4 +72,18 @@ public class PostagemBO {
         // Regras de negócio
         return postagemDAO.deleteByOwner(idPostagem, idUsuario);
     }
+
+    // countPosts()
+    public int countPosts(int idUsuario) {
+        postagemDAO = new PostagemDAO();
+        // Regras de negócio
+        return postagemDAO.countPosts(idUsuario);
+    }
+
+    // exibirFKArquivo()
+    public int exibirFKArquivo(int idPostagem) {
+        postagemDAO = new PostagemDAO();
+        // Regras de negócio
+        return postagemDAO.exibirFKArquivo(idPostagem);
+    }
 }

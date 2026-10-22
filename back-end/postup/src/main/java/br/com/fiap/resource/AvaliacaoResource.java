@@ -2,11 +2,14 @@ package br.com.fiap.resource;
 
 import br.com.fiap.bo.AvaliacaoBO;
 import br.com.fiap.to.AvaliacaoTO;
+import br.com.fiap.to.AvaliarPostagemRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -66,6 +69,29 @@ public class AvaliacaoResource {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Avaliação deletada com sucesso!");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Avaliação não encontrada!");
+        }
+    }
+
+    @PostMapping("/postagem")
+    public ResponseEntity<?> avaliarPostagem(@RequestBody @Valid AvaliarPostagemRequest request, HttpSession session) {
+        // Recupera o usuário autenticado na sessão
+        Integer idUsuario = (Integer) session.getAttribute("idUsuario");
+        // Se esse usuario for nulo, não tem login
+        if (idUsuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não autenticado.");
+        }
+        try {
+            // chamada de metodo com objeto
+            AvaliacaoTO resultado = avaliacaoBO.avaliarPostagem(request.getIdPostagem(), idUsuario);
+            // Se o metodo retornar nulo, deu erro
+            if (resultado == null) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Postagem inexistente, não pertence ao usuário ou já possui avaliação.");
+            }
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao salvar a avaliação.");
         }
     }
 }
