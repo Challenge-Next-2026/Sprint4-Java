@@ -89,7 +89,7 @@ public class UsuarioResource {
             // Atribui id ao objeto usuario
             usuario.setIdUsuario(idUsuarioLogado);
             // Chama o updateByOwner()
-            UsuarioTO resultado = usuarioBO.updateByOwner(usuario, idUsuarioLogado);
+            UsuarioTO resultado = usuarioBO.update(usuario, idUsuarioLogado);
             // Se o resultado for diferente de null, deu certo
             if (resultado != null) {
                 return ResponseEntity.ok(resultado);

@@ -3,10 +3,7 @@ package br.com.fiap.dao;
 import br.com.fiap.to.PontuacaoTO;
 import br.com.fiap.to.UsuarioTO;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 
 public class PontuacaoDAO {
@@ -17,7 +14,7 @@ public class PontuacaoDAO {
     // Metodo para fazer a leitura e definir sempre um id novo
     public int obterProximoId() throws SQLException {
         // Comando SQL que busca o próximo id disponível
-        String sql = "SELECT NVL(MAX(id_usuario), 0) + 1 AS proximo_id FROM PONTUACAO";
+        String sql = "SELECT NVL(MAX(id_pontuacao), 0) + 1 AS proximo_id FROM PONTUACAO";
         // try-with-resourses passando o comando sql para o objeto ps e armazenando a execução em um objeto rs
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -161,5 +158,54 @@ public class PontuacaoDAO {
             ConnectionFactory.closeConnection();
         }
         return false;
+    }
+
+    // Salvar pontuação com base na avaliação da postagem de um usuário cadastrado
+    public PontuacaoTO saveByOwner(Connection con, PontuacaoTO pontuacao, int idPostagem) throws SQLException {
+        // Consulta para pegar o próximo id disponível
+        String sqlId = "SELECT NVL(MAX(id_pontuacao), 0) + 1 FROM PONTUACAO";
+        // try-with-resources
+        try (PreparedStatement ps = con.prepareStatement(sqlId);
+             ResultSet rs = ps.executeQuery()) {
+            // Se a consulta não for executada, lança uma exceção
+            if (!rs.next()) {
+                throw new SQLException("Não foi possível gerar o ID da pontuação.");
+            } else {
+                // Atribui o numero resgatado ao id
+                pontuacao.setIdPontuacao(rs.getInt(1));
+            }
+        }
+        // Se a data for nula, atribui a data atual
+        if (pontuacao.getDataPontuacao() == null) {
+            pontuacao.setDataPontuacao(java.time.LocalDate.now());
+        }
+        // Insert de nova pontuação
+        String sqlInsert = "INSERT INTO PONTUACAO(id_pontuacao, vl_pontuacao, ds_origempontuacao, dt_pontuacao) VALUES (?, ?, ?, ?)";
+        // try-with-resources
+        try (PreparedStatement ps = con.prepareStatement(sqlInsert)) {
+            // Preenchimento de ?
+            ps.setInt(1, pontuacao.getIdPontuacao());
+            ps.setFloat(2, pontuacao.getValor());
+            ps.setString(3, "Avaliação automática");
+            ps.setDate(4, Date.valueOf(pontuacao.getDataPontuacao()));
+            // Se não executar, lança uma exceção
+            if (ps.executeUpdate() != 1) {
+                throw new SQLException("Não foi possível salvar a pontuação.");
+            }
+        }
+        // Update na tabela postagem de fk pontuação
+        String sqlAssociar = "UPDATE POSTAGEM SET pontuacao_id_pontuacao = ? WHERE id_postagem = ?";
+        // try-with-resources
+        try (PreparedStatement ps = con.prepareStatement(sqlAssociar)) {
+            // Preenchendo ?
+            ps.setInt(1, pontuacao.getIdPontuacao());
+            ps.setInt(2, idPostagem);
+            // Se não executar, lança uma exceção
+            if (ps.executeUpdate() != 1) {
+                throw new SQLException("Não foi possível associar a pontuação à postagem.");
+            }
+        }
+        // Retorna o objeto
+        return pontuacao;
     }
 }

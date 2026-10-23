@@ -7,6 +7,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import br.com.fiap.bo.PontuacaoBO;
+import br.com.fiap.dao.PontuacaoDAO;
+import br.com.fiap.to.PontuacaoTO;
 
 public class AvaliacaoDAO {
     // Atributo
@@ -240,6 +243,14 @@ public class AvaliacaoDAO {
                     throw new SQLException("Não foi possível inserir a avaliação.");
                 }
             }
+
+            // Calcula a pontuação com base nas notas da avaliação.
+            PontuacaoBO pontuacaoBO = new PontuacaoBO();
+            PontuacaoTO pontuacao = pontuacaoBO.calcularPontuacao(avaliacao);
+
+            // Salva a pontuação e associa à postagem utilizando a mesma conexão e transação.
+            PontuacaoDAO pontuacaoDAO = new PontuacaoDAO();
+            pontuacaoDAO.saveByOwner(con, pontuacao, idPostagem);
 
             // Associa a avaliação à postagem do usuário.
             String sqlAssociar = "UPDATE POSTAGEM p SET avaliacao_id_avaliacao = ? WHERE p.id_postagem = ? AND p.avaliacao_id_avaliacao IS NULL AND EXISTS (SELECT 1 FROM POSTAGEM_USUARIO pu WHERE pu.id_postagem = p.id_postagem AND pu.id_usuario = ?)";

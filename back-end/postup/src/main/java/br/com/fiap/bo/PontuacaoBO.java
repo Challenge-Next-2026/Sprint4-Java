@@ -2,6 +2,7 @@ package br.com.fiap.bo;
 
 import br.com.fiap.dao.PontuacaoDAO;
 import br.com.fiap.dao.UsuarioDAO;
+import br.com.fiap.to.AvaliacaoTO;
 import br.com.fiap.to.PontuacaoTO;
 import br.com.fiap.to.UsuarioTO;
 
@@ -52,5 +53,22 @@ public class PontuacaoBO {
         pontuacaoDAO = new PontuacaoDAO();
         // Regras de negócio
         return pontuacaoDAO.delete(idPontuacao);
+    }
+
+    // calcularPontuacao()
+    public PontuacaoTO calcularPontuacao(AvaliacaoTO avaliacao) {
+        // Armazenando valores do objeto avaliação
+        float impacto = avaliacao.getNotaImpacto();
+        float dificuldade = avaliacao.getNotaDificuldade();
+        float confiabilidade = avaliacao.getNotaConfiabilidade();
+        float frequencia = avaliacao.getNotaFrequencia();
+        // Calculando valor com peso
+        float valor = (impacto * 0.40f) + (dificuldade * 0.30f) + (confiabilidade * 0.20f) + (frequencia * 0.10f);
+        // Populando objeto pontuação
+        PontuacaoTO pontuacao = new PontuacaoTO();
+        pontuacao.setValor(Math.round(valor * 100.0f) / 100.0f); // 2 casas decimáis
+        pontuacao.setDataPontuacao(java.time.LocalDate.now());
+        // Retornando objeto
+        return pontuacao;
     }
 }

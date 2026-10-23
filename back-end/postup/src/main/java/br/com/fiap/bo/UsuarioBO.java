@@ -33,13 +33,6 @@ public class UsuarioBO{
         return usuarioDAO.save(usuario);
     }
 
-    // update()
-    public UsuarioTO update(UsuarioTO usuario) {
-        usuarioDAO = new UsuarioDAO();
-        // Regras de negócio
-        return usuarioDAO.update(usuario);
-    }
-
     // findAll()
     public ArrayList<UsuarioTO> findAll() {
         usuarioDAO = new UsuarioDAO();
@@ -69,9 +62,9 @@ public class UsuarioBO{
     }
 
     // updateByOwner()
-    public UsuarioTO updateByOwner(UsuarioTO usuario, int idUsuarioLogado) throws SQLException {
+    public UsuarioTO update(UsuarioTO usuario, int idUsuarioLogado) throws SQLException {
         usuarioDAO = new UsuarioDAO();
         // Regras de negócio
-        return usuarioDAO.updateByOwner(usuario, idUsuarioLogado);
+        return usuarioDAO.update(usuario, idUsuarioLogado);
     }
 }

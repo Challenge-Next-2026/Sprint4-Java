@@ -20,16 +20,8 @@ public class UsuarioTO {
     @PastOrPresent
     private LocalDate dataCadastro;
 
-    // Construtores
+    // Construtor vazio
     public UsuarioTO() {
-    }
-
-    public UsuarioTO(Integer idUsuario, String nome, String email, String senha, LocalDate dataCadastro) {
-        this.idUsuario = idUsuario;
-        this.nome = nome;
-        this.email = email;
-        this.senha = senha;
-        this.dataCadastro = dataCadastro;
     }
 
     // Getter e Setter
@@ -72,29 +64,4 @@ public class UsuarioTO {
     public void setDataCadastro(LocalDate dataCadastro) {
         this.dataCadastro = dataCadastro;
     }
-
-    /*
-
-    // Metodos Exclusivos
-    // Cadastro de um objeto Usuário na memória
-    public String cadastrarUsuario()
-    {
-        LocalDate dataAtual = LocalDate.now();
-
-        setNome(JOptionPane.showInputDialog("Informe o Nome:"));
-        setEmail(JOptionPane.showInputDialog("Informe o Email:"));
-        setSenha(JOptionPane.showInputDialog("Informe a Senha:"));
-        setDataCadastro(dataAtual);
-        return "Usuário cadastrado com sucesso!";
-    }
-
-    // Alterar o email de um objeto Usuário na memória
-    public String alterar()
-    {
-        setEmail(JOptionPane.showInputDialog(String.format("Informe o novo Email: {%s}", getEmail())));
-        setSenha(JOptionPane.showInputDialog(String.format("Informe a nova Senha: {%s}", getSenha())));
-        return "Email e/ou Senha alterados!";
-    }
-
-    */
 }

@@ -213,7 +213,7 @@ public class PostagemDAO {
                 ps.setNull(7, INTEGER);
                 ps.setInt(8, 1);
                 ps.setNull(9, INTEGER);
-                ps.setInt(10, 1);
+                ps.setNull(10, INTEGER);
 
                 ps.executeUpdate();
             }
