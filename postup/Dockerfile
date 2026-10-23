@@ -10,7 +10,7 @@ COPY . ./
 
 # Build the app
 RUN chmod +x mvnw
-RUN ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency: list install
+RUN ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install
 
 # Run the java app
 CMD ["sh", "-c", "java -jar target/postup-0.0.1-SNAPSHOT.jar"]
