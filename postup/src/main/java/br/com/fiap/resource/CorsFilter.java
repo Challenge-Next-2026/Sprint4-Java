@@ -16,7 +16,7 @@ public class CorsFilter extends OncePerRequestFilter {
 
     private static final List<String> ORIGENS_PERMITIDAS = List.of(
             "http://localhost:5173",
-            "https://post-up-flax.vercel.app"
+            "https://post-up-six.vercel.app"
     );
 
     @Override
